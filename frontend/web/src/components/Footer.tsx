@@ -62,19 +62,19 @@ export function Footer() {
                 {content.footer_note || content.tagline || fallbackContent.footer_note}
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid w-full gap-3 sm:w-auto sm:grid-cols-2">
               <Link
                 to="/apply"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 font-semibold text-[var(--brand-deep)]"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-center font-semibold text-slate-950 shadow-lg shadow-emerald-950/15"
               >
-                Apply now
+                Apply for admission
                 <ArrowRight className="size-4" />
               </Link>
               <a
                 href={buildGlobalWhatsAppUrl("Assalamualaikum, I want to discuss admission for GoGreenTech Learning Academy.")}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/35 px-5 py-3 font-semibold text-white"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/35 px-5 py-3 text-center font-semibold text-white"
               >
                 <MessageCircleMore className="size-4" />
                 WhatsApp

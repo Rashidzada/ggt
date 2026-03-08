@@ -31,21 +31,6 @@ export function Navigation() {
 
   return (
     <header className="sticky top-0 z-40">
-      <div className="border-b border-white/65 bg-[rgba(255,255,255,0.74)] backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-deep)] sm:px-6 sm:text-xs sm:tracking-[0.24em] lg:px-8">
-          <p className="max-w-[15rem] leading-5 sm:max-w-none">Admissions open for project-based and free-learning students</p>
-          <a
-            href={buildGlobalWhatsAppUrl("Assalamualaikum, I want to discuss admission for GoGreenTech Learning Academy.")}
-            target="_blank"
-            rel="noreferrer"
-            className="hidden items-center gap-2 rounded-full bg-[var(--highlight)] px-3 py-1 text-[11px] font-bold tracking-[0.18em] text-[var(--brand-deep)] sm:inline-flex"
-          >
-            WhatsApp support
-            <ArrowRight className="size-3.5" />
-          </a>
-        </div>
-      </div>
-
       <div className="border-b border-white/70 bg-white/70 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
           <div className="flex items-center justify-between gap-3">
