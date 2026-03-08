@@ -114,6 +114,32 @@ Windows desktop:
 flutter run -d windows --dart-define=API_URL=http://127.0.0.1:8000/api
 ```
 
+Release defaults:
+
+- Flutter release builds use `https://ggt.pythonanywhere.com/api` by default
+- You can still override the API per build with `--dart-define=API_URL=...`
+
+Production release builds:
+
+```bash
+flutter build windows --release --dart-define=API_URL=https://ggt.pythonanywhere.com/api
+flutter build apk --release --dart-define=API_URL=https://ggt.pythonanywhere.com/api
+```
+
+Android signing:
+
+- If `mobile/gogreentech_app/android/key.properties` exists, the APK release build uses that keystore
+- If it does not exist, local release builds fall back to the debug key
+
+`android/key.properties` format:
+
+```properties
+storePassword=your-store-password
+keyPassword=your-key-password
+keyAlias=upload
+storeFile=upload-keystore.jks
+```
+
 ## Demo accounts
 
 - Admin: `admin@gogreentech.local` / `Admin123!`

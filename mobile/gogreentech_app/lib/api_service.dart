@@ -1,21 +1,12 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'app_config.dart';
 import 'models.dart';
 
 class ApiService {
   ApiService()
-      : _baseUrl = Platform.isAndroid
-            ? const String.fromEnvironment(
-                'API_URL',
-                defaultValue: 'http://10.0.2.2:8010/api',
-              )
-            : const String.fromEnvironment(
-                'API_URL',
-                defaultValue: 'http://127.0.0.1:8010/api',
-              ),
+      : _baseUrl = AppConfig.apiBaseUrl,
         _dio = Dio() {
     _dio.options.baseUrl = _baseUrl;
     _dio.interceptors.add(

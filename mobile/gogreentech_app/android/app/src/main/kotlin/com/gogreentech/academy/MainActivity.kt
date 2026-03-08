@@ -1,4 +1,4 @@
-package com.example.gogreentech_app
+package com.gogreentech.academy
 
 import io.flutter.embedding.android.FlutterActivity
 

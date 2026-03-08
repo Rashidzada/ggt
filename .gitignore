@@ -27,4 +27,7 @@ mobile/gogreentech_app/.flutter-plugins-dependencies
 mobile/gogreentech_app/.packages
 mobile/gogreentech_app/.metadata
 mobile/gogreentech_app/android/local.properties
+mobile/gogreentech_app/android/key.properties
+mobile/gogreentech_app/android/*.jks
+mobile/gogreentech_app/android/*.keystore
 mobile/gogreentech_app/ios/Flutter/Flutter.podspec
