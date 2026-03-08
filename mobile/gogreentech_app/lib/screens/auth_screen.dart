@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_controller.dart';
+import '../app_error.dart';
 import '../widgets/common_widgets.dart';
 
 class AuthScreen extends StatelessWidget {
@@ -93,10 +94,17 @@ class _LoginFormState extends State<LoginForm> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login failed. Please check your credentials.')),
+          SnackBar(
+            content: Text(
+              describeAppError(
+                error,
+                fallback: 'Login failed. Please check your credentials.',
+              ),
+            ),
+          ),
         );
       }
     }
@@ -176,10 +184,17 @@ class _RegisterFormState extends State<RegisterForm> {
         password: _passwordController.text,
         confirmPassword: _confirmPasswordController.text,
       );
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration failed. Please review the details and try again.')),
+          SnackBar(
+            content: Text(
+              describeAppError(
+                error,
+                fallback: 'Registration failed. Please review the details and try again.',
+              ),
+            ),
+          ),
         );
       }
     }

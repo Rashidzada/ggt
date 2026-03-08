@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../app_controller.dart';
+import '../app_error.dart';
 import '../models.dart';
 import '../widgets/common_widgets.dart';
 import 'course_detail_screen.dart';
@@ -353,10 +354,17 @@ class _ProfileTabState extends State<ProfileTab> {
           const SnackBar(content: Text('Profile updated successfully.')),
         );
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to update profile right now.')),
+          SnackBar(
+            content: Text(
+              describeAppError(
+                error,
+                fallback: 'Unable to update profile right now.',
+              ),
+            ),
+          ),
         );
       }
     }

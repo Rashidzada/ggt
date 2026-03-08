@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../app_controller.dart';
+import '../app_error.dart';
 import '../models.dart';
 import '../widgets/common_widgets.dart';
 
@@ -77,6 +78,19 @@ class _ApplicationScreenState extends State<ApplicationScreen> {
           ],
         ),
       );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              describeAppError(
+                error,
+                fallback: 'Unable to submit your application right now.',
+              ),
+            ),
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
