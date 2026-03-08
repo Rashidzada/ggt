@@ -17,7 +17,7 @@ The project is structured so you can:
 - Django-managed free-learning videos with embedded playback
 - Course catalog with lessons, resources, previews, quizzes, applications, and payment records
 - Owner profile management with either uploaded images or external image URLs, including Google Drive shared image links
-- Flutter client for Android and Windows
+- Flutter client for Android and Windows with animated splash, student notifications, free-learning library, and in-app YouTube playback on supported platforms
 
 ## Tech stack
 

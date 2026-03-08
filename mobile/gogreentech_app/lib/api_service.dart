@@ -7,8 +7,16 @@ import 'models.dart';
 class ApiService {
   ApiService()
       : _baseUrl = AppConfig.apiBaseUrl,
-        _dio = Dio() {
-    _dio.options.baseUrl = _baseUrl;
+        _dio = Dio(
+          BaseOptions(
+            baseUrl: AppConfig.apiBaseUrl,
+            connectTimeout: const Duration(seconds: 15),
+            receiveTimeout: const Duration(seconds: 20),
+            sendTimeout: const Duration(seconds: 20),
+            contentType: Headers.jsonContentType,
+            responseType: ResponseType.json,
+          ),
+        ) {
     _dio.interceptors.add(
       QueuedInterceptorsWrapper(
         onRequest: (options, handler) {
@@ -81,7 +89,7 @@ class ApiService {
       );
       final data = response.data ?? {};
       final access = data['access'] as String?;
-      if (access == null) {
+      if (access == null || access.isEmpty) {
         return false;
       }
       final refresh = data['refresh'] as String? ?? _refreshToken!;
@@ -102,7 +110,7 @@ class ApiService {
           .map((item) => Map<String, dynamic>.from(item as Map))
           .toList();
     }
-    return [];
+    return const [];
   }
 
   Future<UserModel?> restoreUser() async {
@@ -164,7 +172,7 @@ class ApiService {
       try {
         await _dio.post('/auth/logout/', data: {'refresh': _refreshToken});
       } catch (_) {
-        // Ignore remote logout failures and clear local state anyway.
+        // Remote logout failure should not block local logout.
       }
     }
     await _clearTokens();
@@ -172,7 +180,7 @@ class ApiService {
 
   Future<UserModel> fetchCurrentUser() async {
     final response = await _dio.get<Map<String, dynamic>>('/auth/me/');
-    return UserModel.fromJson(Map<String, dynamic>.from(response.data ?? {}));
+    return UserModel.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
   }
 
   Future<UserModel> updateProfile({
@@ -194,12 +202,39 @@ class ApiService {
         },
       },
     );
-    return UserModel.fromJson(Map<String, dynamic>.from(response.data ?? {}));
+    return UserModel.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
   }
 
   Future<HomepageContent> fetchHomepageContent() async {
     final response = await _dio.get<Map<String, dynamic>>('/website/homepage/');
-    return HomepageContent.fromJson(Map<String, dynamic>.from(response.data ?? {}));
+    return HomepageContent.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
+  }
+
+  Future<List<TestimonialModel>> fetchTestimonials() async {
+    final response = await _dio.get('/website/testimonials/');
+    return _extractResults(response.data).map(TestimonialModel.fromJson).toList();
+  }
+
+  Future<FreeLearningVideoModel?> fetchFeaturedFreeVideo() async {
+    final response = await _dio.get('/website/free-videos/featured/');
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return FreeLearningVideoModel.fromJson(data);
+    }
+    if (data is Map) {
+      return FreeLearningVideoModel.fromJson(Map<String, dynamic>.from(data));
+    }
+    return null;
+  }
+
+  Future<List<FreeLearningVideoModel>> fetchFreeLearningVideos() async {
+    final response = await _dio.get('/website/free-videos/');
+    return _extractResults(response.data).map(FreeLearningVideoModel.fromJson).toList();
+  }
+
+  Future<List<CourseCategoryModel>> fetchCategories() async {
+    final response = await _dio.get('/courses/categories/');
+    return _extractResults(response.data).map(CourseCategoryModel.fromJson).toList();
   }
 
   Future<List<CourseModel>> fetchFeaturedCourses() async {
@@ -207,14 +242,19 @@ class ApiService {
     return _extractResults(response.data).map(CourseModel.fromJson).toList();
   }
 
-  Future<List<CourseModel>> fetchCourses() async {
-    final response = await _dio.get('/courses/');
+  Future<List<CourseModel>> fetchCourses({String? categorySlug}) async {
+    final response = await _dio.get(
+      '/courses/',
+      queryParameters: categorySlug == null || categorySlug.isEmpty
+          ? null
+          : {'category__slug': categorySlug},
+    );
     return _extractResults(response.data).map(CourseModel.fromJson).toList();
   }
 
   Future<CourseModel> fetchCourseDetail(String slug) async {
     final response = await _dio.get<Map<String, dynamic>>('/courses/$slug/');
-    return CourseModel.fromJson(Map<String, dynamic>.from(response.data ?? {}));
+    return CourseModel.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
   }
 
   Future<List<QuizSummary>> fetchCourseQuizzes(int courseId) async {
@@ -224,7 +264,12 @@ class ApiService {
 
   Future<QuizDetail> fetchQuizDetail(String slug) async {
     final response = await _dio.get<Map<String, dynamic>>('/quizzes/$slug/');
-    return QuizDetail.fromJson(Map<String, dynamic>.from(response.data ?? {}));
+    return QuizDetail.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
+  }
+
+  Future<List<QuizAttemptModel>> fetchQuizAttempts() async {
+    final response = await _dio.get('/quizzes/attempts/');
+    return _extractResults(response.data).map(QuizAttemptModel.fromJson).toList();
   }
 
   Future<QuizAttemptModel> submitQuiz({
@@ -235,7 +280,7 @@ class ApiService {
       '/quizzes/$slug/submit/',
       data: {'answers': answers},
     );
-    return QuizAttemptModel.fromJson(Map<String, dynamic>.from(response.data ?? {}));
+    return QuizAttemptModel.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
   }
 
   Future<void> markLessonComplete(int lessonId) async {
@@ -251,12 +296,12 @@ class ApiService {
 
   Future<StudentDashboardData> fetchStudentDashboard() async {
     final response = await _dio.get<Map<String, dynamic>>('/dashboard/student/');
-    return StudentDashboardData.fromJson(Map<String, dynamic>.from(response.data ?? {}));
+    return StudentDashboardData.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
   }
 
   Future<AdminDashboardData> fetchAdminDashboard() async {
     final response = await _dio.get<Map<String, dynamic>>('/dashboard/admin/stats/');
-    return AdminDashboardData.fromJson(Map<String, dynamic>.from(response.data ?? {}));
+    return AdminDashboardData.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
   }
 
   Future<ApplicationResult> applyForCourse({
@@ -280,6 +325,33 @@ class ApiService {
         'agreed_via_whatsapp': agreedViaWhatsapp,
       },
     );
-    return ApplicationResult.fromJson(Map<String, dynamic>.from(response.data ?? {}));
+    return ApplicationResult.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
+  }
+
+  Future<List<EnrollmentApplicationModel>> fetchApplications() async {
+    final response = await _dio.get('/courses/applications/');
+    return _extractResults(response.data).map(EnrollmentApplicationModel.fromJson).toList();
+  }
+
+  Future<List<EnrollmentModel>> fetchEnrollments() async {
+    final response = await _dio.get('/courses/enrollments/');
+    return _extractResults(response.data).map(EnrollmentModel.fromJson).toList();
+  }
+
+  Future<List<PaymentRecordModel>> fetchPayments() async {
+    final response = await _dio.get('/courses/payments/');
+    return _extractResults(response.data).map(PaymentRecordModel.fromJson).toList();
+  }
+
+  Future<List<NotificationModel>> fetchNotifications() async {
+    final response = await _dio.get('/notifications/');
+    return _extractResults(response.data).map(NotificationModel.fromJson).toList();
+  }
+
+  Future<NotificationModel> markNotificationRead(int notificationId) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/notifications/$notificationId/mark_read/',
+    );
+    return NotificationModel.fromJson(Map<String, dynamic>.from(response.data ?? const {}));
   }
 }

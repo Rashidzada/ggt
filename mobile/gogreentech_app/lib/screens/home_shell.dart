@@ -7,6 +7,8 @@ import '../app_error.dart';
 import '../models.dart';
 import '../widgets/common_widgets.dart';
 import 'course_detail_screen.dart';
+import 'notifications_screen.dart';
+import 'video_player_screen.dart';
 
 class AcademyShell extends StatefulWidget {
   const AcademyShell({super.key});
@@ -20,14 +22,17 @@ class _AcademyShellState extends State<AcademyShell> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<AppController>();
     final tabs = [
-      HomeTab(onBrowseCourses: () => setState(() => _index = 1)),
+      HomeTab(onBrowseCourses: () => setState(() => _index = 2)),
+      const FreeLearningTab(),
       const CoursesTab(),
       const DashboardTab(),
       const ProfileTab(),
     ];
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const BrandLockup(
           compact: true,
@@ -36,6 +41,14 @@ class _AcademyShellState extends State<AcademyShell> {
           showSubtitle: false,
         ),
         actions: [
+          BellIconButton(
+            count: controller.unreadNotificationsCount,
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'WhatsApp',
             onPressed: () => openExternal(globalWhatsAppUrl()),
@@ -48,17 +61,15 @@ class _AcademyShellState extends State<AcademyShell> {
           ),
         ],
       ),
-      body: SafeArea(child: tabs[_index]),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => openExternal(globalWhatsAppUrl()),
-        icon: const Icon(Icons.chat_rounded),
-        label: const Text('WhatsApp'),
+      body: AppGradientBackground(
+        child: SafeArea(child: tabs[_index]),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.play_circle_outline_rounded), label: 'Learn'),
           NavigationDestination(icon: Icon(Icons.menu_book_rounded), label: 'Courses'),
           NavigationDestination(icon: Icon(Icons.dashboard_rounded), label: 'Dashboard'),
           NavigationDestination(icon: Icon(Icons.person_rounded), label: 'Profile'),
@@ -83,14 +94,42 @@ class HomeTab extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: () async {
-        await controller.loadHome();
-        await controller.loadCourses();
-      },
+      onRefresh: controller.refreshAll,
       child: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
         children: [
           _HeroCard(content: content, onBrowseCourses: onBrowseCourses),
+          if (controller.featuredFreeVideo != null) ...[
+            const SizedBox(height: 18),
+            Card(
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(18),
+                title: const Text(
+                  'Featured free lesson',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    controller.featuredFreeVideo!.title,
+                    style: const TextStyle(height: 1.5),
+                  ),
+                ),
+                trailing: const Icon(Icons.play_circle_fill_rounded, color: Color(0xFF1F7A4D), size: 34),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => VideoPlayerScreen(
+                        title: controller.featuredFreeVideo!.title,
+                        description: controller.featuredFreeVideo!.description,
+                        videoUrl: controller.featuredFreeVideo!.videoUrl,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
           SectionTitle(
             title: 'Why students choose GoGreenTech',
@@ -110,6 +149,26 @@ class HomeTab extends StatelessWidget {
                 )
                 .toList(),
           ),
+          if (content.learningModes.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            const SectionTitle(
+              title: 'Learning modes',
+              subtitle: 'The academy supports structured courses, preview lessons, and direct guidance.',
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: content.learningModes
+                  .map(
+                    (mode) => MetaTag(
+                      text: mode,
+                      backgroundColor: Colors.white,
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
           const SizedBox(height: 24),
           const SectionTitle(
             title: 'Featured courses',
@@ -122,6 +181,116 @@ class HomeTab extends StatelessWidget {
               child: CourseTile(course: course),
             ),
           ),
+          if (controller.testimonials.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            const SectionTitle(
+              title: 'Student voice',
+              subtitle: 'Recent learner feedback from the academy.',
+            ),
+            const SizedBox(height: 12),
+            ...controller.testimonials.take(3).map(
+              (testimonial) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Card(
+                  child: ListTile(
+                    title: Text(testimonial.name),
+                    subtitle: Text(
+                      testimonial.content,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (content.ownerName.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SectionTitle(
+                      title: 'Owner and mentor',
+                      subtitle: 'Direct learning support from the academy owner.',
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      content.ownerName,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(content.ownerRole),
+                    if (content.aboutDescription.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Text(content.aboutDescription, style: const TextStyle(height: 1.5)),
+                    ],
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        FilledButton.icon(
+                          onPressed: () => openExternal(globalWhatsAppUrl()),
+                          icon: const Icon(Icons.chat_rounded),
+                          label: const Text('Talk on WhatsApp'),
+                        ),
+                        if (content.ownerProfileUrl.isNotEmpty)
+                          OutlinedButton.icon(
+                            onPressed: () => openExternal(content.ownerProfileUrl),
+                            icon: const Icon(Icons.open_in_new_rounded),
+                            label: const Text('Owner profile'),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class FreeLearningTab extends StatelessWidget {
+  const FreeLearningTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<AppController>();
+    final videos = controller.freeVideos;
+
+    return RefreshIndicator(
+      onRefresh: controller.refreshAll,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
+        children: [
+          SectionTitle(
+            title: 'Free learning',
+            subtitle: 'Watch your published Pashto lessons inside the app.',
+            trailing: MetaTag(
+              text: '${videos.length} videos',
+              backgroundColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (videos.isEmpty)
+            const EmptyStateCard(
+              icon: Icons.ondemand_video_rounded,
+              title: 'No free lessons yet',
+              subtitle: 'When new free lessons are published from Django admin, they will appear here.',
+            )
+          else
+            ...videos.map(
+              (video) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: VideoTile(video: video),
+              ),
+            ),
         ],
       ),
     );
@@ -137,6 +306,7 @@ class CoursesTab extends StatefulWidget {
 
 class _CoursesTabState extends State<CoursesTab> {
   String _search = '';
+  String _selectedCategorySlug = '';
 
   @override
   Widget build(BuildContext context) {
@@ -150,17 +320,54 @@ class _CoursesTabState extends State<CoursesTab> {
         .toList();
 
     return RefreshIndicator(
-      onRefresh: controller.loadCourses,
+      onRefresh: controller.refreshAll,
       child: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
         children: [
+          const SectionTitle(
+            title: 'Courses',
+            subtitle: 'Browse guided tracks, project-based paths, and trial-ready lessons.',
+          ),
+          const SizedBox(height: 16),
           TextField(
             decoration: const InputDecoration(
               labelText: 'Search courses',
               prefixIcon: Icon(Icons.search_rounded),
-              border: OutlineInputBorder(),
             ),
             onChanged: (value) => setState(() => _search = value),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 42,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: const Text('All'),
+                    selected: _selectedCategorySlug.isEmpty,
+                    onSelected: (_) async {
+                      setState(() => _selectedCategorySlug = '');
+                      await context.read<AppController>().loadCourses();
+                    },
+                  ),
+                ),
+                ...controller.categories.map(
+                  (category) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(category.title),
+                      selected: _selectedCategorySlug == category.slug,
+                      onSelected: (_) async {
+                        setState(() => _selectedCategorySlug = category.slug);
+                        await context.read<AppController>().loadCourses(categorySlug: category.slug);
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 18),
           ...filteredCourses.map(
@@ -185,36 +392,42 @@ class DashboardTab extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: controller.loadDashboard,
       child: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
         children: controller.user?.isAdmin == true
             ? _buildAdminDashboard(controller.adminDashboard)
-            : _buildStudentDashboard(controller.studentDashboard),
+            : _buildStudentDashboard(controller),
       ),
     );
   }
 
-  List<Widget> _buildStudentDashboard(StudentDashboardData? data) {
-    if (data == null) {
+  List<Widget> _buildStudentDashboard(AppController controller) {
+    final data = controller.studentDashboard;
+    if (data == null && controller.enrollments.isEmpty && controller.payments.isEmpty) {
       return const [SizedBox(height: 250, child: Center(child: CircularProgressIndicator()))];
     }
 
     return [
-      const SectionTitle(
+      SectionTitle(
         title: 'Student dashboard',
-        subtitle: 'Track course access, quiz history, notifications, and payment status.',
+        subtitle: 'Track course access, quiz history, notifications, applications, and payment status.',
+        trailing: MetaTag(
+          text: '${controller.unreadNotificationsCount} unread',
+          backgroundColor: const Color(0xFFFFE8D8),
+        ),
       ),
       const SizedBox(height: 12),
       StatStrip(
         items: [
-          StatItem(label: 'Courses', value: '${data.enrollments.length}', icon: Icons.menu_book_rounded),
-          StatItem(label: 'Unread', value: '${data.unreadNotifications}', icon: Icons.notifications_active_rounded),
-          StatItem(label: 'Quizzes', value: '${data.quizAttempts.length}', icon: Icons.quiz_rounded),
+          StatItem(label: 'Courses', value: '${controller.enrollments.length}', icon: Icons.menu_book_rounded),
+          StatItem(label: 'Applications', value: '${controller.applications.length}', icon: Icons.assignment_rounded),
+          StatItem(label: 'Unread', value: '${controller.unreadNotificationsCount}', icon: Icons.notifications_active_rounded),
+          StatItem(label: 'Quizzes', value: '${controller.quizAttempts.length}', icon: Icons.quiz_rounded),
         ],
       ),
       const SizedBox(height: 20),
       const SectionTitle(title: 'Enrollments', subtitle: 'Your active learning tracks.'),
       const SizedBox(height: 12),
-      ...data.enrollments.map(
+      ...controller.enrollments.map(
         (enrollment) => Card(
           elevation: 0,
           child: ListTile(
@@ -223,10 +436,26 @@ class DashboardTab extends StatelessWidget {
           ),
         ),
       ),
+      if (controller.applications.isNotEmpty) ...[
+        const SizedBox(height: 20),
+        const SectionTitle(title: 'Applications', subtitle: 'Your submitted course requests and pricing updates.'),
+        const SizedBox(height: 12),
+        ...controller.applications.map(
+          (application) => Card(
+            elevation: 0,
+            child: ListTile(
+              title: Text(application.courseTitle),
+              subtitle: Text(application.pricingNotes.isEmpty ? application.status : application.pricingNotes),
+              trailing: MetaTag(text: application.status),
+              onTap: application.whatsappUrl.isEmpty ? null : () => openExternal(application.whatsappUrl),
+            ),
+          ),
+        ),
+      ],
       const SizedBox(height: 20),
       const SectionTitle(title: 'Payments', subtitle: 'Per-course payment records and invoice access.'),
       const SizedBox(height: 12),
-      ...data.payments.map(
+      ...controller.payments.map(
         (payment) => Card(
           elevation: 0,
           child: ListTile(
@@ -237,6 +466,23 @@ class DashboardTab extends StatelessWidget {
           ),
         ),
       ),
+      if (controller.notifications.isNotEmpty) ...[
+        const SizedBox(height: 20),
+        const SectionTitle(title: 'Latest notifications', subtitle: 'Recent academy updates from the platform.'),
+        const SizedBox(height: 12),
+        ...controller.notifications.take(3).map(
+          (notification) => Card(
+            elevation: 0,
+            child: ListTile(
+              title: Text(notification.title),
+              subtitle: Text(notification.message, maxLines: 2, overflow: TextOverflow.ellipsis),
+              trailing: notification.isRead
+                  ? null
+                  : const Icon(Icons.brightness_1, size: 12, color: Color(0xFFFF7A30)),
+            ),
+          ),
+        ),
+      ],
     ];
   }
 
@@ -456,9 +702,18 @@ class CourseTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (course.thumbnailUrl.isNotEmpty) ...[
+                AppNetworkImage(
+                  url: course.thumbnailUrl,
+                  width: double.infinity,
+                  height: 180,
+                  borderRadius: 24,
+                ),
+                const SizedBox(height: 16),
+              ],
               Row(
                 children: [
-                  Chip(label: Text(course.level)),
+                  MetaTag(text: course.level),
                   const Spacer(),
                   if (course.featured) const Icon(Icons.workspace_premium_rounded, color: Color(0xFF1F7A4D)),
                 ],
@@ -472,11 +727,72 @@ class CourseTile extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 8,
                 children: [
-                  MetaTag(text: course.category.title),
+                  MetaTag(text: course.category.title, backgroundColor: Colors.white),
                   MetaTag(text: course.duration),
-                  MetaTag(text: course.priceDisplay),
+                  MetaTag(text: course.priceDisplay, backgroundColor: const Color(0xFFFFE8D8)),
                 ],
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class VideoTile extends StatelessWidget {
+  const VideoTile({super.key, required this.video});
+
+  final FreeLearningVideoModel video;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => VideoPlayerScreen(
+                title: video.title,
+                description: video.description,
+                videoUrl: video.videoUrl,
+              ),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppNetworkImage(
+                url: video.thumbnailUrl,
+                width: double.infinity,
+                height: 180,
+                borderRadius: 24,
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 10,
+                runSpacing: 8,
+                children: [
+                  MetaTag(text: video.language),
+                  if (video.showOnHomepage)
+                    const MetaTag(
+                      text: 'Featured',
+                      backgroundColor: Color(0xFFFFE8D8),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(video.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              if (video.description.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(video.description, style: const TextStyle(height: 1.5)),
+              ],
             ],
           ),
         ),

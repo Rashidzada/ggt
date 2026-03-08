@@ -7,6 +7,7 @@ import '../widgets/common_widgets.dart';
 import 'application_screen.dart';
 import 'lesson_screen.dart';
 import 'quiz_screen.dart';
+import 'video_player_screen.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   const CourseDetailScreen({super.key, required this.course});
@@ -53,23 +54,30 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(detail.title)),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         children: [
           Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
             child: Padding(
               padding: const EdgeInsets.all(22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (detail.thumbnailUrl.isNotEmpty) ...[
+                    AppNetworkImage(
+                      url: detail.thumbnailUrl,
+                      width: double.infinity,
+                      height: 220,
+                      borderRadius: 26,
+                    ),
+                    const SizedBox(height: 18),
+                  ],
                   Wrap(
                     spacing: 12,
                     runSpacing: 8,
                     children: [
                       MetaTag(text: detail.category.title),
                       MetaTag(text: detail.duration),
-                      MetaTag(text: detail.priceDisplay),
+                      MetaTag(text: detail.priceDisplay, backgroundColor: const Color(0xFFFFE8D8)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -99,7 +107,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       ),
                       if (detail.introVideoUrl.isNotEmpty)
                         OutlinedButton.icon(
-                          onPressed: () => openExternal(detail.introVideoUrl),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => VideoPlayerScreen(
+                                title: '${detail.title} intro',
+                                description: detail.shortDescription,
+                                videoUrl: detail.introVideoUrl,
+                              ),
+                            ),
+                          ),
                           icon: const Icon(Icons.play_circle_fill_rounded),
                           label: const Text('Watch intro'),
                         ),
@@ -119,7 +135,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           const SizedBox(height: 12),
           ...detail.lessons.map(
             (lesson) => Card(
-              elevation: 0,
               child: ListTile(
                 title: Text(lesson.title),
                 subtitle: Text('${lesson.durationMinutes} minutes'),
@@ -137,17 +152,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           const SizedBox(height: 20),
           const SectionTitle(
             title: 'Resources',
-            subtitle: 'Google Drive links and code resources appear here.',
+            subtitle: 'Drive folders, notes, and code resources available for this track.',
           ),
           const SizedBox(height: 12),
           ...detail.resources.map(
             (resource) => Card(
-              elevation: 0,
               child: ListTile(
                 title: Text(resource.title),
-                subtitle: Text('${resource.resourceType.toUpperCase()} · ${resource.visibility}'),
+                subtitle: Text('${resource.resourceType.toUpperCase()} • ${resource.visibility}'),
                 trailing: const Icon(Icons.open_in_new_rounded),
-                onTap: () => openExternal(resource.driveLink),
+                onTap: resource.driveLink.isEmpty ? null : () => openExternal(resource.driveLink),
               ),
             ),
           ),
@@ -159,7 +173,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           const SizedBox(height: 12),
           ..._quizzes.map(
             (quiz) => Card(
-              elevation: 0,
               child: ListTile(
                 title: Text(quiz.title),
                 subtitle: Text('Passing score ${quiz.passingScore}%'),
