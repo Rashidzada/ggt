@@ -32,8 +32,8 @@ export function Navigation() {
   return (
     <header className="sticky top-0 z-40">
       <div className="border-b border-white/65 bg-[rgba(255,255,255,0.74)] backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--brand-deep)] sm:px-6 lg:px-8">
-          <p className="truncate">Admissions open for project-based and free-learning students</p>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-deep)] sm:px-6 sm:text-xs sm:tracking-[0.24em] lg:px-8">
+          <p className="max-w-[15rem] leading-5 sm:max-w-none">Admissions open for project-based and free-learning students</p>
           <a
             href={buildGlobalWhatsAppUrl("Assalamualaikum, I want to discuss admission for GoGreenTech Learning Academy.")}
             target="_blank"
@@ -47,7 +47,7 @@ export function Navigation() {
       </div>
 
       <div className="border-b border-white/70 bg-white/70 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
           <div className="flex items-center justify-between gap-3">
             <NavLink
               to="/"
@@ -58,8 +58,8 @@ export function Navigation() {
             >
               <BrandMark
                 logoClassName="size-10 rounded-xl sm:size-12 sm:rounded-2xl"
-                titleClassName="brand-title text-lg leading-none text-[var(--brand-deep)] sm:text-xl"
-                subtitleClassName="text-[10px] uppercase tracking-[0.24em] text-[var(--muted)] sm:text-xs sm:tracking-[0.28em]"
+                titleClassName="brand-title text-base leading-none text-[var(--brand-deep)] min-[360px]:text-lg sm:text-xl"
+                subtitleClassName="hidden text-[10px] uppercase tracking-[0.24em] text-[var(--muted)] min-[360px]:block sm:text-xs sm:tracking-[0.28em]"
               />
             </NavLink>
 
@@ -221,6 +221,13 @@ export function Navigation() {
                     </NavLink>
                   </>
                 )}
+              </div>
+
+              <div className="rounded-[24px] border border-[var(--line)] bg-white px-4 py-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--brand)]">Quick help</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  Use WhatsApp for admissions help, then sign in to continue with free learning and your dashboard.
+                </p>
               </div>
             </div>
           ) : null}

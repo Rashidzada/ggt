@@ -70,11 +70,31 @@ input,
 select,
 textarea {
   color: var(--copy);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
 }
 
 input::placeholder,
 textarea::placeholder {
   color: rgba(88, 114, 104, 0.78);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(31, 122, 77, 0.38);
+  box-shadow: 0 0 0 4px rgba(31, 122, 77, 0.1);
+}
+
+img,
+iframe {
+  display: block;
+}
+
+iframe {
+  border: 0;
 }
 
 ::selection {
@@ -156,4 +176,21 @@ textarea::placeholder {
     linear-gradient(135deg, rgba(18, 75, 49, 0.98), rgba(31, 122, 77, 0.96)),
     linear-gradient(45deg, rgba(255, 255, 255, 0.08), transparent);
   box-shadow: 0 30px 90px rgba(18, 75, 49, 0.24);
+}
+
+@media (max-width: 640px) {
+  body::before {
+    background-size: 60px 60px;
+    opacity: 0.12;
+  }
+
+  .section-spacing {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  .hero-mesh::after {
+    width: 11rem;
+    height: 11rem;
+  }
 }
