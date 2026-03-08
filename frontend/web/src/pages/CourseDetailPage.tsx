@@ -5,6 +5,7 @@ import {
   FileText,
   LockKeyhole,
   MessageCircleMore,
+  Sparkles,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -56,18 +57,20 @@ export function CourseDetailPage() {
 
   return (
     <div className="space-y-10">
-      <section className="glass-panel rounded-[36px] px-6 py-8 sm:px-10 sm:py-10">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="glass-panel rounded-[40px] px-6 py-8 sm:px-10 sm:py-10">
+        <div className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr]">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.32em] text-[var(--brand)]">{course.category.title}</p>
             <h1 className="brand-title mt-4 text-5xl leading-tight text-slate-950">{course.title}</h1>
             <p className="mt-5 max-w-3xl text-lg leading-8 text-[var(--muted)]">{course.full_description}</p>
+
             <div className="mt-8 flex flex-wrap gap-3 text-sm font-semibold">
               <span className="rounded-full bg-[var(--highlight)] px-4 py-2 text-[var(--brand-deep)]">{course.level}</span>
               <span className="rounded-full border border-[var(--line)] bg-white px-4 py-2">{course.duration}</span>
               <span className="rounded-full border border-[var(--line)] bg-white px-4 py-2">{course.price_display}</span>
               <span className="rounded-full border border-[var(--line)] bg-white px-4 py-2">{course.course_type}</span>
             </div>
+
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 to={`/apply?course=${course.id}`}
@@ -89,9 +92,24 @@ export function CourseDetailPage() {
                 Apply via WhatsApp
               </a>
             </div>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="soft-card rounded-[24px] p-5">
+                <p className="text-xs uppercase tracking-[0.24em] text-[var(--muted)]">Lessons</p>
+                <p className="mt-3 text-3xl font-semibold text-slate-950">{course.lessons_count}</p>
+              </div>
+              <div className="soft-card rounded-[24px] p-5">
+                <p className="text-xs uppercase tracking-[0.24em] text-[var(--muted)]">Quizzes</p>
+                <p className="mt-3 text-3xl font-semibold text-slate-950">{course.quiz_count}</p>
+              </div>
+              <div className="soft-card rounded-[24px] p-5">
+                <p className="text-xs uppercase tracking-[0.24em] text-[var(--muted)]">Progress</p>
+                <p className="mt-3 text-3xl font-semibold text-slate-950">{course.progress_percent ?? 0}%</p>
+              </div>
+            </div>
           </div>
 
-          <div id="intro-video" className="soft-card overflow-hidden rounded-[30px]">
+          <div id="intro-video" className="soft-card overflow-hidden rounded-[32px]">
             {course.intro_video_url ? (
               <iframe
                 src={toYouTubeEmbedUrl(course.intro_video_url)}
@@ -100,28 +118,44 @@ export function CourseDetailPage() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
+            ) : course.thumbnail_url ? (
+              <img src={course.thumbnail_url} alt={course.title} className="aspect-video w-full object-cover" />
             ) : (
               <div className="flex h-full min-h-[280px] items-center justify-center bg-gradient-to-br from-[#eaf7ec] to-[#d9efdd]">
                 <CirclePlay className="size-16 text-[var(--brand)]" />
               </div>
             )}
-            <div className="p-6">
-              <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Access status</p>
-              <p className="mt-3 text-xl font-semibold text-slate-950">
-                {course.is_enrolled ? "You have full course access." : `Preview access: ${course.trial_lesson_limit ?? 3} lessons`}
+            <div className="space-y-4 p-6">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[var(--highlight)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-deep)]">
+                <Sparkles className="size-4" />
+                Access status
+              </div>
+              <p className="text-xl font-semibold text-slate-950">
+                {course.is_enrolled ? "This student already has full course access." : `Preview access: ${course.trial_lesson_limit ?? 3} lessons`}
               </p>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              <p className="text-sm leading-7 text-[var(--muted)]">
                 {!course.is_enrolled
-                  ? "Preview lessons are open. Full videos, enrolled resources, and tracked learning progress unlock after approval."
-                  : `Current course progress: ${course.progress_percent ?? 0}%`}
+                  ? "Preview lessons are open. Full lessons, enrolled resources, and tracked learning progress unlock after approval."
+                  : `Current course progress is ${course.progress_percent ?? 0}%.`}
               </p>
+              {course.drive_folder_url ? (
+                <a
+                  href={course.drive_folder_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 font-semibold text-[var(--brand)]"
+                >
+                  Open course drive folder
+                  <ArrowRight className="size-4" />
+                </a>
+              ) : null}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="soft-card rounded-[30px] p-6">
+      <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+        <article className="soft-card rounded-[32px] p-6">
           <div className="flex items-center gap-3">
             <BookOpenText className="size-5 text-[var(--brand)]" />
             <h2 className="text-2xl font-semibold text-slate-950">Lessons</h2>
@@ -152,7 +186,7 @@ export function CourseDetailPage() {
         </article>
 
         <div className="space-y-6">
-          <article className="soft-card rounded-[30px] p-6">
+          <article className="soft-card rounded-[32px] p-6">
             <div className="flex items-center gap-3">
               <FileText className="size-5 text-[var(--brand)]" />
               <h2 className="text-2xl font-semibold text-slate-950">Resources</h2>
@@ -167,7 +201,9 @@ export function CourseDetailPage() {
                   className="block rounded-[22px] border border-[var(--line)] bg-white p-4 transition hover:border-[var(--brand)]"
                 >
                   <p className="font-semibold text-slate-950">{resource.title}</p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">{resource.resource_type.toUpperCase()} - {resource.visibility}</p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">
+                    {resource.resource_type.toUpperCase()} • {resource.visibility}
+                  </p>
                 </a>
               ))}
               {!(course.resources ?? []).length ? (
@@ -176,11 +212,11 @@ export function CourseDetailPage() {
             </div>
           </article>
 
-          <article className="soft-card rounded-[30px] p-6">
+          <article className="soft-card rounded-[32px] p-6">
             <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Quiz support</p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">Course quizzes</h2>
             <div className="mt-4 space-y-2 text-sm text-[var(--muted)]">
-              {quizTitles.length ? quizTitles.map((title) => <p key={title}>- {title}</p>) : <p>Quiz data appears after publication.</p>}
+              {quizTitles.length ? quizTitles.map((title) => <p key={title}>• {title}</p>) : <p>Quiz data appears after publication.</p>}
             </div>
           </article>
         </div>

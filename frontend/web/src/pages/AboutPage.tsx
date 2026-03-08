@@ -1,34 +1,22 @@
-import { ExternalLink, GraduationCap, Mail, MessageCircleMore, Phone, Rocket, ShieldCheck, Youtube } from "lucide-react";
+import {
+  ArrowRight,
+  ExternalLink,
+  GraduationCap,
+  Mail,
+  MessageCircleMore,
+  Phone,
+  Rocket,
+  ShieldCheck,
+  Youtube,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
 import { LoadingBlock } from "../components/LoadingBlock";
-import { api, buildGlobalWhatsAppUrl } from "../lib/api";
-import type { HomepageContent } from "../types/api";
-
-const principles = [
-  {
-    title: "Lightweight by design",
-    description: "The system avoids unnecessary complexity so students can register, preview, enroll, and study with minimal friction.",
-    icon: Rocket,
-  },
-  {
-    title: "Support-first enrollment",
-    description: "Course prices and enrollment details can be discussed directly on WhatsApp, which fits the owner's workflow and the platform spec.",
-    icon: MessageCircleMore,
-  },
-  {
-    title: "Structured learning path",
-    description: "Courses are broken into lessons, linked resources, and quizzes so learners always know the next step.",
-    icon: GraduationCap,
-  },
-  {
-    title: "Built to extend",
-    description: "The product architecture leaves space for payments, certificates, live classes, and multiple instructors later.",
-    icon: ShieldCheck,
-  },
-];
+import { SectionHeading } from "../components/SectionHeading";
+import { api, buildGlobalWhatsAppUrl, extractResults } from "../lib/api";
+import type { HomepageContent, Testimonial } from "../types/api";
 
 const fallbackContent: HomepageContent = {
   id: 0,
@@ -54,18 +42,43 @@ const fallbackContent: HomepageContent = {
   owner_qualification: "MSc Computer Science, University of Swat, 2019",
   owner_photo: null,
   owner_photo_display_url: "",
-  owner_photo_url: "https://rashidzada.pythonanywhere.com/media/profile_images/mypic-removebg-preview.png",
+  owner_photo_url: "",
   owner_profile_url: "https://rashidzada.pythonanywhere.com/",
   footer_note: "",
 };
 
+const principles = [
+  {
+    title: "Lightweight by design",
+    description: "The system avoids unnecessary complexity so students can register, preview, enroll, and study with minimal friction.",
+    icon: Rocket,
+  },
+  {
+    title: "Support-first enrollment",
+    description: "Course prices and admission details can be discussed directly on WhatsApp so students get clarity before committing.",
+    icon: MessageCircleMore,
+  },
+  {
+    title: "Structured learning path",
+    description: "Courses are broken into lessons, resources, and quizzes so learners always know the next step.",
+    icon: GraduationCap,
+  },
+  {
+    title: "Built to extend",
+    description: "The product leaves room for more instructors, richer payments, certificates, and future expansion.",
+    icon: ShieldCheck,
+  },
+];
+
 export function AboutPage() {
   const { user } = useAuth();
   const [content, setContent] = useState<HomepageContent>(fallbackContent);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [ownerPhotoIndex, setOwnerPhotoIndex] = useState(0);
+
   const freeLearningLink = user ? "/free-learning" : "/login";
-  const freeLearningLabel = user ? "Learn Free in Pashto" : "Login for Free Learning";
+  const freeLearningLabel = user ? "Learn free in Pashto" : "Login for free learning";
   const ownerPhotoCandidates = Array.from(
     new Set(
       [
@@ -81,10 +94,15 @@ export function AboutPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const { data } = await api.get<HomepageContent>("/website/homepage/");
-        setContent(data);
+        const [homepageResponse, testimonialResponse] = await Promise.all([
+          api.get<HomepageContent>("/website/homepage/"),
+          api.get("/website/testimonials/"),
+        ]);
+        setContent(homepageResponse.data);
+        setTestimonials(extractResults<Testimonial>(testimonialResponse.data));
       } catch {
         setContent(fallbackContent);
+        setTestimonials([]);
       } finally {
         setIsLoading(false);
       }
@@ -103,8 +121,8 @@ export function AboutPage() {
 
   return (
     <div className="space-y-10">
-      <section className="glass-panel rounded-[36px] px-6 py-10 sm:px-10">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_minmax(0,340px)] lg:items-center">
+      <section className="glass-panel rounded-[40px] px-6 py-10 sm:px-10 sm:py-12">
+        <div className="grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.32em] text-[var(--brand)]">About the academy</p>
             <h1 className="brand-title mt-4 max-w-3xl text-4xl leading-tight text-slate-950 sm:text-5xl">
@@ -116,8 +134,9 @@ export function AboutPage() {
                 href={buildGlobalWhatsAppUrl("Assalamualaikum, I want to learn more about GoGreenTech Learning Academy.")}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex rounded-full bg-[var(--brand)] px-6 py-3 font-semibold text-white"
+                className="inline-flex items-center gap-2 rounded-full bg-[var(--brand)] px-6 py-3 font-semibold text-white"
               >
+                <MessageCircleMore className="size-4" />
                 Talk on WhatsApp
               </a>
               <Link
@@ -127,20 +146,22 @@ export function AboutPage() {
                 <Youtube className="size-4" />
                 {freeLearningLabel}
               </Link>
-              <a
-                href={content.owner_profile_url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-6 py-3 font-semibold text-[var(--copy)]"
-              >
-                <ExternalLink className="size-4" />
-                About the Owner
-              </a>
+              {content.owner_profile_url ? (
+                <a
+                  href={content.owner_profile_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-6 py-3 font-semibold text-[var(--copy)]"
+                >
+                  <ExternalLink className="size-4" />
+                  About the owner
+                </a>
+              ) : null}
             </div>
           </div>
 
           <aside className="soft-card mx-auto w-full max-w-sm overflow-hidden rounded-[32px] lg:justify-self-end">
-            <div className="aspect-[4/3.5] overflow-hidden bg-[var(--highlight)] sm:aspect-[4/3.8]">
+            <div className="aspect-[4/4.4] overflow-hidden bg-[var(--highlight)]">
               <img
                 src={ownerPhoto}
                 alt={content.owner_name}
@@ -152,7 +173,7 @@ export function AboutPage() {
                 }}
               />
             </div>
-            <div className="space-y-3 p-5 sm:p-6">
+            <div className="space-y-4 p-6">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--brand)]">Owner</p>
                 <h2 className="mt-2 text-2xl font-semibold text-slate-950">{content.owner_name}</h2>
@@ -174,9 +195,9 @@ export function AboutPage() {
                   <p className="mt-2 text-sm text-[var(--muted)]">{content.owner_whatsapp}</p>
                 </div>
               </div>
-              <div className="rounded-2xl bg-[var(--surface)] px-4 py-4">
+              <div className="rounded-2xl bg-[var(--highlight)] px-4 py-4">
                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--brand)]">Qualification</p>
-                <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{content.owner_qualification}</p>
+                <p className="mt-2 text-sm leading-7 text-[var(--copy)]">{content.owner_qualification}</p>
               </div>
             </div>
           </aside>
@@ -199,17 +220,28 @@ export function AboutPage() {
         })}
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+      <section className="grid gap-6 lg:grid-cols-[0.84fr_1.16fr]">
         <article className="soft-card rounded-[30px] p-8">
           <p className="text-xs font-bold uppercase tracking-[0.32em] text-[var(--brand)]">Academy profile</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">{content.site_name}</h2>
           <p className="mt-4 leading-8 text-[var(--muted)]">{content.tagline}</p>
           <p className="mt-6 leading-8 text-[var(--muted)]">{content.intro_text}</p>
+          <Link
+            to="/courses"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--brand)] px-5 py-3 font-semibold text-white"
+          >
+            Explore courses
+            <ArrowRight className="size-4" />
+          </Link>
         </article>
 
         <article className="soft-card rounded-[30px] p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.32em] text-[var(--brand)]">Learning modes</p>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <SectionHeading
+            eyebrow="Learning modes"
+            title="Students can start in the way that feels easiest"
+            description="The academy supports different entry paths so students can build confidence first, then move into structured admission."
+          />
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {content.learning_modes.map((mode) => (
               <div key={mode} className="rounded-[24px] bg-[var(--surface)] px-5 py-6">
                 <p className="text-sm font-semibold leading-7 text-slate-950">{mode}</p>
@@ -218,6 +250,27 @@ export function AboutPage() {
           </div>
         </article>
       </section>
+
+      {testimonials.length ? (
+        <section className="section-spacing">
+          <SectionHeading
+            eyebrow="Trust"
+            title="Students stay when the system feels clear"
+            description="The About page should reinforce confidence: practical training, simple admission, and direct support."
+          />
+          <div className="mt-8 grid gap-5 lg:grid-cols-3">
+            {testimonials.slice(0, 3).map((testimonial) => (
+              <article key={testimonial.id} className="soft-card rounded-[28px] p-6">
+                <p className="text-sm leading-8 text-slate-900">"{testimonial.content}"</p>
+                <div className="mt-6">
+                  <p className="font-semibold text-slate-950">{testimonial.name}</p>
+                  <p className="text-sm text-[var(--muted)]">{testimonial.role}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
